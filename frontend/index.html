@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4D Hyperspace Minesweeper</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>4D Hyperspace Minesweeper</h1>
+        <p class="subtitle">Left-click to reveal · Right-click to flag · Hover to see neighbours</p>
+    </header>
+
+    <main>
+        <section id="setup" class="panel">
+            <form id="setup-form">
+                <label>
+                    Dimensions
+                    <input type="number" id="input-dimensions" min="1" max="4" value="4">
+                </label>
+                <label>
+                    Size per axis
+                    <input type="number" id="input-size" min="2" max="8" value="3">
+                </label>
+                <label>
+                    Total mines
+                    <input type="number" id="input-mines" min="1" value="20">
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="input-wrap">
+                    Wrap (toroidal)
+                </label>
+                <button type="submit">Start new game</button>
+            </form>
+        </section>
+
+        <section id="controls" class="panel" hidden>
+            <span id="state-indicator" data-state="IN_PROGRESS">Ready</span>
+            <span id="mine-counter">Mines: —</span>
+            <label class="checkbox">
+                <input type="checkbox" id="input-delta">
+                Delta Mode
+            </label>
+        </section>
+
+        <section id="board-container">
+            <div id="board" aria-label="Game board"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

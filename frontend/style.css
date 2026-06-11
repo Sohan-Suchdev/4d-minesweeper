@@ -1,0 +1,184 @@
+:root {
+    --cell-size: 30px;
+    --cell-gap: 2px;
+    --inner-gap: 3px;
+    --outer-gap: 10px;
+    --colour-bg: #0f0f1a;
+    --colour-panel: #1a1a2e;
+    --colour-subgrid: rgba(255, 255, 255, 0.04);
+    --colour-hidden: #4a4e69;
+    --colour-hidden-hover: #5d6182;
+    --colour-revealed: #22223b;
+    --colour-flag: #e63946;
+    --colour-mine: #000;
+    --colour-highlight: #ffd60a;
+    --colour-text: #e9ecef;
+    --colour-muted: #9a9ab0;
+    --colour-won: #06d6a0;
+    --colour-lost: #ef476f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 1.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--colour-bg);
+    color: var(--colour-text);
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+header h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.75rem;
+    letter-spacing: 0.02em;
+}
+
+header .subtitle {
+    margin: 0;
+    color: var(--colour-muted);
+    font-size: 0.85rem;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.panel {
+    background: var(--colour-panel);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+#setup-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: end;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+    color: var(--colour-muted);
+    gap: 0.25rem;
+}
+
+label.checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--colour-text);
+    cursor: pointer;
+}
+
+input[type="number"] {
+    width: 90px;
+    padding: 0.4rem 0.5rem;
+    background: var(--colour-bg);
+    border: 1px solid #2e2e44;
+    border-radius: 4px;
+    color: var(--colour-text);
+    font-size: 0.95rem;
+}
+
+input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--colour-highlight);
+}
+
+button[type="submit"] {
+    padding: 0.5rem 1rem;
+    background: var(--colour-highlight);
+    color: var(--colour-bg);
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.1s ease;
+}
+
+button[type="submit"]:hover { filter: brightness(1.1); }
+
+#state-indicator {
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: var(--colour-bg);
+}
+
+#state-indicator[data-state="IN_PROGRESS"] { color: var(--colour-highlight); }
+#state-indicator[data-state="WON"]         { color: var(--colour-won); }
+#state-indicator[data-state="LOST"]        { color: var(--colour-lost); }
+
+#mine-counter {
+    font-size: 0.85rem;
+    color: var(--colour-muted);
+}
+
+#board-container {
+    overflow: auto;
+    max-width: 100%;
+}
+
+/* Outer container is a CSS grid; JS sets grid-template-columns to match outer dimensions. */
+#board {
+    display: inline-grid;
+    gap: var(--outer-gap);
+    padding: var(--outer-gap);
+    background: var(--colour-panel);
+    border-radius: 8px;
+}
+
+/* Each .sub-grid is the innermost 2D slice; JS sets grid-template-columns from innerDims. */
+.sub-grid {
+    display: grid;
+    gap: var(--cell-gap);
+    padding: var(--inner-gap);
+    background: var(--colour-subgrid);
+    border-radius: 4px;
+}
+
+.cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--colour-hidden);
+    border-radius: 3px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 60ms ease, box-shadow 60ms ease;
+}
+
+.cell.hidden:hover { background: var(--colour-hidden-hover); }
+.cell.revealed    { background: var(--colour-revealed); cursor: default; }
+.cell.flagged     { background: var(--colour-flag); color: var(--colour-text); }
+.cell.mine        { background: var(--colour-mine); color: #fff; }
+
+.cell.neighbour-highlight {
+    box-shadow: inset 0 0 0 2px var(--colour-highlight);
+}
+
+.cell.delta-negative { color: var(--colour-lost) !important; }
