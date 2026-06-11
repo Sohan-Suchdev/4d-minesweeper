@@ -7,7 +7,6 @@ import com.minesweeper.dto.CoordinatePayload
 import com.minesweeper.dto.NewGameRequest
 import com.minesweeper.dto.toDTO
 import com.minesweeper.repository.GameRepository
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -34,7 +33,7 @@ class GameController(private val repository: GameRepository) {
         val board = Board(bounds, request.totalMines, request.wrap)
         val id = UUID.randomUUID()
         repository.save(id, board)
-        return ResponseEntity.status(HttpStatus.CREATED).body(board.toDTO(id))
+        return ResponseEntity.ok(board.toDTO(id))
     }
 
     @PostMapping("/{id}/reveal")
