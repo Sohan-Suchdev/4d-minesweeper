@@ -1,6 +1,8 @@
 "use strict";
 
-const API_BASE = "http://localhost:8080";
+// Empty base — nginx reverse-proxies /api/* to the backend in docker. For non-docker dev,
+// point a local static server at the same origin as Spring Boot, or override here.
+const API_BASE = "";
 
 let currentGame = null;
 let cellByCoord = new Map();

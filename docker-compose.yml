@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: minesweeper-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - minesweeper
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: minesweeper-frontend
+    ports:
+      - "3000:80"
+    environment:
+      # nginx reverse-proxies /api/* to this URL — same docker network, service-name DNS.
+      BACKEND_URL: http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - minesweeper
+
+networks:
+  minesweeper:
+    driver: bridge

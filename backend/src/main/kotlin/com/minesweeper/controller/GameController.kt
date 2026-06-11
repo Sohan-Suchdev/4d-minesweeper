@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
-// CORS opened wide for local dev; tightened to the frontend origin in Phase 5 once docker-compose is wired.
-@CrossOrigin(origins = ["*"])
+// Same-origin via nginx in docker; the listed origins cover non-docker dev (Spring on 8080 + static server on 3000/5173).
+@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:5173"])
 @RestController
 @RequestMapping("/api/game")
 class GameController(private val repository: GameRepository) {

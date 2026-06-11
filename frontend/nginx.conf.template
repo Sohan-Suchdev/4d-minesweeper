@@ -1,0 +1,22 @@
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Static assets are served from disk; missing paths fall through to the SPA shell.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # All /api/* traffic is reverse-proxied to the backend service over the docker network.
+    location /api/ {
+        proxy_pass ${BACKEND_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
