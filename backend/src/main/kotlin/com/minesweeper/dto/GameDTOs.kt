@@ -4,10 +4,17 @@ import com.minesweeper.domain.Board
 import com.minesweeper.domain.Cell
 import java.util.UUID
 
+enum class Difficulty(val dimensions: Int, val size: Int, val totalMines: Int) {
+    EASY(4, 3, 10),
+    MEDIUM(4, 4, 40),
+    HARD(4, 5, 99),
+}
+
 data class NewGameRequest(
-    val dimensions: Int,
-    val size: Int,
-    val totalMines: Int,
+    val difficulty: String? = null,
+    val dimensions: Int = 4,
+    val size: Int = 3,
+    val totalMines: Int = 10,
     val wrap: Boolean = false,
 )
 

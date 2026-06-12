@@ -6,48 +6,154 @@
     <title>4D Hyperspace Minesweeper</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <header>
-        <h1>4D Hyperspace Minesweeper</h1>
-        <p class="subtitle">Left-click to reveal · Right-click to flag · Hover to see neighbours</p>
-    </header>
+<body data-theme="deep-space">
+
+    <nav class="topnav">
+        <div class="brand">
+            <span class="brand-mark">⬢</span>
+            <span class="brand-text">4D · Minesweeper</span>
+        </div>
+
+        <div class="topnav-controls">
+            <label class="select-wrap">
+                <span>Difficulty</span>
+                <select id="difficulty-select">
+                    <option value="EASY">Easy</option>
+                    <option value="MEDIUM" selected>Medium</option>
+                    <option value="HARD">Hard</option>
+                    <option value="CUSTOM">Custom</option>
+                </select>
+            </label>
+
+            <label class="select-wrap">
+                <span>Theme</span>
+                <select id="theme-select">
+                    <option value="deep-space" selected>Deep Space</option>
+                    <option value="chrono">Chrono</option>
+                    <option value="cosmic">Cosmic</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="topnav-hud">
+            <div class="hud-tile" title="Flags remaining">
+                <span class="hud-icon">⚐</span>
+                <span class="hud-readout" id="flag-counter">000</span>
+            </div>
+            <div class="hud-tile" title="Elapsed time (seconds)">
+                <span class="hud-icon">◷</span>
+                <span class="hud-readout" id="timer">000</span>
+            </div>
+            <button type="button" id="mute-btn" class="icon-btn" title="Mute sound">🔊</button>
+            <button type="button" id="info-btn" class="icon-btn" title="How to play">?</button>
+        </div>
+    </nav>
 
     <main>
-        <section id="setup" class="panel">
-            <form id="setup-form">
-                <label>
-                    Dimensions
-                    <input type="number" id="input-dimensions" min="1" max="4" value="4">
-                </label>
+        <section id="custom-controls" aria-label="Custom game settings">
+            <div class="custom-inner">
                 <label>
                     Size per axis
-                    <input type="number" id="input-size" min="2" max="8" value="3">
+                    <input id="input-size" type="number" min="2" max="8" value="4">
                 </label>
                 <label>
                     Total mines
-                    <input type="number" id="input-mines" min="1" value="20">
+                    <input id="input-mines" type="number" min="1" value="30">
                 </label>
-                <label class="checkbox">
+                <label class="toggle">
                     <input type="checkbox" id="input-wrap">
-                    Wrap (toroidal)
+                    <span>Wrap (toroidal)</span>
                 </label>
-                <button type="submit">Start new game</button>
-            </form>
+                <button type="button" id="new-game-btn" class="primary">Start</button>
+            </div>
         </section>
 
-        <section id="controls" class="panel" hidden>
-            <span id="state-indicator" data-state="IN_PROGRESS">Ready</span>
-            <span id="mine-counter">Mines: —</span>
-            <label class="checkbox">
+        <section class="game-controls">
+            <label class="toggle">
                 <input type="checkbox" id="input-delta">
-                Delta Mode
+                <span>Delta mode</span>
             </label>
+            <span id="state-indicator" data-state="READY">Ready</span>
         </section>
 
         <section id="board-container">
             <div id="board" aria-label="Game board"></div>
         </section>
+
+        <p class="subtitle">Left-click to reveal · Right-click to flag · Hover to highlight neighbours</p>
     </main>
+
+    <dialog id="modal-game-over" class="modal modal-loss">
+        <div class="modal-glyph">💥</div>
+        <h2>Detonated</h2>
+        <p class="modal-tagline">A mine was tripped. The hyperspace has been mapped.</p>
+        <dl class="modal-stats">
+            <dt>Your time</dt><dd id="game-over-time">—</dd>
+            <dt>Best time</dt><dd id="game-over-best">—</dd>
+        </dl>
+        <div class="modal-actions">
+            <button type="button" class="primary" data-action="play-again">Play Again</button>
+            <button type="button" data-action="close">Dismiss</button>
+        </div>
+    </dialog>
+
+    <dialog id="modal-level-cleared" class="modal modal-win">
+        <div class="modal-glyph">⭐</div>
+        <h2>Level Cleared</h2>
+        <p class="modal-tagline">Every safe cell uncovered. Hyperspace secured.</p>
+        <dl class="modal-stats">
+            <dt>Your time</dt><dd id="level-cleared-time">—</dd>
+            <dt>Best time</dt><dd id="level-cleared-best">—</dd>
+        </dl>
+        <p id="level-cleared-new-best" class="best-badge" hidden>★ New personal best ★</p>
+        <div class="modal-actions">
+            <button type="button" class="primary" data-action="play-again">Play Again</button>
+            <button type="button" data-action="close">Dismiss</button>
+        </div>
+    </dialog>
+
+    <dialog id="modal-instructions" class="modal">
+        <div class="modal-glyph">⬢</div>
+        <h2>How to play 4D Minesweeper</h2>
+
+        <p class="modal-tagline">
+            You're sweeping a four-dimensional minefield. Each cell touches up to
+            <strong>80 neighbours</strong> across the <em>W</em>, <em>X</em>, <em>Y</em>, <em>Z</em> axes —
+            rendered as a 2D grid of 2D sub-grids.
+        </p>
+
+        <div id="mini-grid-demo" class="mini-grid" aria-hidden="true"></div>
+        <p class="mini-caption">
+            Hover the centre of a 3⁴ board and every other cell — all 80 of them — lights up.
+        </p>
+
+        <h3 class="rules-heading">The basics</h3>
+        <ul class="modal-rules">
+            <li><strong>Left-click</strong> to reveal · <strong>right-click</strong> to flag.</li>
+            <li>The first click is always safe — mines are placed afterwards.</li>
+            <li>Win by revealing every non-mine cell. Detonate one and it's over.</li>
+        </ul>
+
+        <h3 class="rules-heading">Wrap mode</h3>
+        <p class="rules-body">
+            Toggling <strong>Wrap</strong> stitches the edges of the board together — the grid becomes a
+            <em>hyper-torus</em>. Step off the left edge and you reappear on the right; off the top and
+            you return at the bottom. Every cell, even the corners, now has the full 80 neighbours.
+            The topology folds back on itself: <em>there are no walls in hyperspace</em>.
+        </p>
+
+        <h3 class="rules-heading">Delta mode</h3>
+        <p class="rules-body">
+            Each revealed number tells you how many of a cell's 80 neighbours hide a mine.
+            <strong>Delta mode</strong> subtracts the flags you've already placed from that count — so
+            the displayed number becomes <em>"mines I haven't yet found"</em>. When it reaches zero,
+            the surrounding cells are safe to sweep; if it goes negative, you've over-flagged.
+        </p>
+
+        <div class="modal-actions">
+            <button type="button" class="primary" data-action="close">Got it</button>
+        </div>
+    </dialog>
 
     <script src="app.js"></script>
 </body>
