@@ -41,7 +41,7 @@ class Board(
 
     fun reveal(coordinate: Coordinate): RevealOutcome {
         cellAt(coordinate)
-        if (!minesInitialised) initialiseMines(safeOrigin = coordinate)
+        val initialSafeZone = if (!minesInitialised) initialiseMines(safeOrigin = coordinate) else emptySet()
 
         val target = cells[coordinate]!!
         if (target.isRevealed || target.isFlagged) return RevealOutcome.NO_OP
@@ -49,24 +49,43 @@ class Board(
             cells[coordinate] = target.copy(isRevealed = true)
             return RevealOutcome.MINE_DETONATED
         }
+
         cascadeFrom(coordinate)
+        for (safeCoordinate in initialSafeZone) {
+            if (safeCoordinate != coordinate) cascadeFrom(safeCoordinate)
+        }
         return if (isWon()) RevealOutcome.WON else RevealOutcome.CASCADE
     }
 
     fun isWon(): Boolean = cells.values.all { it.isMine || it.isRevealed }
 
     /**
-     * Deferred mine placement: only the first-click cell is excluded, so the opener is never a mine
-     * but can still be an informative numbered cell.
+     * Deferred mine placement: the clicked cell plus an irregular random subset of its Moore
+     * neighbourhood are excluded, then revealed to create an organic starting island.
      */
-    private fun initialiseMines(safeOrigin: Coordinate) {
-        val candidates = cells.keys - safeOrigin
+    private fun initialiseMines(safeOrigin: Coordinate): Set<Coordinate> {
+        val safeZone = initialSafeZone(safeOrigin)
+        val candidates = cells.keys - safeZone
         require(totalMines <= candidates.size) {
             "totalMines=$totalMines exceeds ${candidates.size} placeable cells after safe-zone exclusion"
         }
         val chosen = candidates.shuffled(random).take(totalMines).toHashSet()
         installMines(chosen)
         minesInitialised = true
+        return safeZone
+    }
+
+    private fun initialSafeZone(safeOrigin: Coordinate): Set<Coordinate> {
+        val neighbours = safeOrigin.neighbours(dimensions, wrap).toList()
+        val safeClusterSize = when {
+            neighbours.isEmpty() -> 0
+            neighbours.size < MIN_INITIAL_SAFE_CLUSTER_SIZE -> neighbours.size
+            else -> random.nextInt(
+                MIN_INITIAL_SAFE_CLUSTER_SIZE,
+                minOf(MAX_INITIAL_SAFE_CLUSTER_SIZE, neighbours.size) + 1,
+            )
+        }
+        return (neighbours.shuffled(random).take(safeClusterSize) + safeOrigin).toSet()
     }
 
     private fun installMines(mineCoords: Set<Coordinate>) {
@@ -118,6 +137,9 @@ class Board(
     }
 
     companion object {
+        private const val MIN_INITIAL_SAFE_CLUSTER_SIZE = 10
+        private const val MAX_INITIAL_SAFE_CLUSTER_SIZE = 40
+
         /** Test fixture: skip the safe-start randomiser and install a predetermined mine layout. */
         internal fun withFixedMines(
             dimensions: IntArray,

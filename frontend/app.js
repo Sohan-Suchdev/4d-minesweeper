@@ -261,14 +261,27 @@ function buildCell(coord) {
 }
 
 function paintCell(el, dto) {
-    el.classList.remove("hidden", "revealed", "flagged", "mine", "fresh-reveal", "delta-negative", "mine-detonated");
+    el.classList.remove(
+        "hidden",
+        "revealed",
+        "flagged",
+        "mine",
+        "mine-review",
+        "fresh-reveal",
+        "delta-negative",
+        "mine-detonated",
+    );
     el.textContent = "";
     el.style.color = "";
 
     const key = coordKey(dto.coordinate);
     const justRevealed = dto.isRevealed && !previouslyRevealedKeys.has(key);
 
-    if (dto.isFlagged && !dto.isRevealed) {
+    if (currentGame?.state === "LOST" && dto.isMine === true) {
+        el.classList.add("revealed", "mine", "mine-review");
+        el.textContent = "✸";
+        if (dto.isRevealed && justRevealed) el.classList.add("fresh-reveal");
+    } else if (dto.isFlagged && !dto.isRevealed) {
         el.classList.add("flagged");
         el.textContent = "⚑";
     } else if (dto.isRevealed && dto.isMine === true) {

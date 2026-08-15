@@ -457,6 +457,10 @@ button.primary:hover {
     color: var(--colour-mine-fg);
 }
 
+.cell.mine-review {
+    box-shadow: inset 0 0 0 1px var(--colour-danger);
+}
+
 .cell.mine-detonated {
     box-shadow: 0 0 16px var(--colour-danger);
     animation: minePulse 600ms ease-out;
