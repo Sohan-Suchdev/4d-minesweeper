@@ -3,6 +3,8 @@
 const API_BASE = "";
 const FIXED_DIMENSIONS = 4;
 const MIN_FADE_MS = 180;
+const REVEAL_RIPPLE_STEP_SECONDS = 0.03;
+const MAX_REVEAL_RIPPLE_SECONDS = 0.72;
 
 // ---------- State ----------
 
@@ -54,6 +56,22 @@ function mooreNeighbours(coord, dimensions, wrap) {
         if (inBounds) out.push(next);
     }
     return out;
+}
+
+function coordinateDistance(a, b, dimensions, wrap) {
+    if (!a || !b || a.length !== b.length) return 0;
+    let distance = 0;
+    for (let i = 0; i < a.length; i++) {
+        const delta = Math.abs(a[i] - b[i]);
+        distance += wrap ? Math.min(delta, dimensions[i] - delta) : delta;
+    }
+    return distance;
+}
+
+function dimensionalDistance(a, b) {
+    let distance = 0;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) distance++;
+    return distance;
 }
 
 // ---------- Audio (Web Audio API, no external files) ----------
@@ -265,6 +283,7 @@ function paintCell(el, dto) {
         "hidden",
         "revealed",
         "flagged",
+        "questioned",
         "mine",
         "mine-review",
         "fresh-reveal",
@@ -273,24 +292,29 @@ function paintCell(el, dto) {
     );
     el.textContent = "";
     el.style.color = "";
+    el.style.animationDelay = "";
 
     const key = coordKey(dto.coordinate);
     const justRevealed = dto.isRevealed && !previouslyRevealedKeys.has(key);
+    const markState = dto.flagState || (dto.isFlagged ? "FLAGGED" : "UNFLAGGED");
 
     if (currentGame?.state === "LOST" && dto.isMine === true) {
         el.classList.add("revealed", "mine", "mine-review");
         el.textContent = "✸";
-        if (dto.isRevealed && justRevealed) el.classList.add("fresh-reveal");
-    } else if (dto.isFlagged && !dto.isRevealed) {
+        if (dto.isRevealed && justRevealed) addRevealRipple(el, dto.coordinate);
+    } else if (markState === "FLAGGED" && !dto.isRevealed) {
         el.classList.add("flagged");
         el.textContent = "⚑";
+    } else if (markState === "QUESTION" && !dto.isRevealed) {
+        el.classList.add("questioned");
+        el.textContent = "?";
     } else if (dto.isRevealed && dto.isMine === true) {
         el.classList.add("revealed", "mine");
         el.textContent = "✸";
-        if (justRevealed) el.classList.add("fresh-reveal");
+        if (justRevealed) addRevealRipple(el, dto.coordinate);
     } else if (dto.isRevealed) {
         el.classList.add("revealed");
-        if (justRevealed) el.classList.add("fresh-reveal");
+        if (justRevealed) addRevealRipple(el, dto.coordinate);
         const n = displayNumber(dto);
         if (n !== 0) {
             el.textContent = n;
@@ -301,6 +325,13 @@ function paintCell(el, dto) {
     } else {
         el.classList.add("hidden");
     }
+}
+
+function addRevealRipple(el, coord) {
+    const distance = coordinateDistance(coord, lastClickedCoord, currentGame.dimensions, currentGame.wrap);
+    const delay = Math.min(distance * REVEAL_RIPPLE_STEP_SECONDS, MAX_REVEAL_RIPPLE_SECONDS);
+    el.style.animationDelay = `${delay}s`;
+    el.classList.add("fresh-reveal");
 }
 
 // ---------- Delta Mode ----------
@@ -327,12 +358,24 @@ function onMouseEnter(coord) {
     // Direct getElementById per neighbour — O(1) per lookup via the deterministic ID scheme.
     for (const nCoord of mooreNeighbours(coord, currentGame.dimensions, currentGame.wrap)) {
         const el = document.getElementById(cellIdFor(nCoord));
-        if (el) { el.classList.add("neighbour-highlight"); highlighted.push(el); }
+        if (el) {
+            const distance = dimensionalDistance(coord, nCoord);
+            el.classList.add("neighbour-highlight", `neighbor-dist-${distance}`);
+            highlighted.push(el);
+        }
     }
 }
 
 function clearHighlight() {
-    for (const el of highlighted) el.classList.remove("neighbour-highlight");
+    for (const el of highlighted) {
+        el.classList.remove(
+            "neighbour-highlight",
+            "neighbor-dist-1",
+            "neighbor-dist-2",
+            "neighbor-dist-3",
+            "neighbor-dist-4",
+        );
+    }
     highlighted = [];
 }
 

@@ -2,6 +2,7 @@ package com.minesweeper.dto
 
 import com.minesweeper.domain.Board
 import com.minesweeper.domain.Cell
+import com.minesweeper.domain.FlagState
 import java.util.UUID
 
 enum class Difficulty(val dimensions: Int, val size: Int, val totalMines: Int) {
@@ -26,6 +27,7 @@ data class CellDTO(
     val coordinate: List<Int>,
     val isRevealed: Boolean,
     val isFlagged: Boolean,
+    val flagState: FlagState,
     val isMine: Boolean?,
     val adjacentMines: Int?,
 )
@@ -44,6 +46,7 @@ fun Cell.toSanitisedDTO(revealMineIdentity: Boolean = false): CellDTO = CellDTO(
     coordinate = coordinate.coords.toList(),
     isRevealed = isRevealed,
     isFlagged = isFlagged,
+    flagState = flagState,
     isMine = if (isRevealed || (revealMineIdentity && isMine)) isMine else null,
     adjacentMines = if (isRevealed && !isMine) adjacentMines else null,
 )

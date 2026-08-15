@@ -36,7 +36,12 @@ class Board(
     fun toggleFlag(coordinate: Coordinate) {
         val cell = cellAt(coordinate)
         if (cell.isRevealed) return
-        cells[coordinate] = cell.copy(isFlagged = !cell.isFlagged)
+        val nextState = when (cell.flagState) {
+            FlagState.UNFLAGGED -> FlagState.FLAGGED
+            FlagState.FLAGGED -> FlagState.QUESTION
+            FlagState.QUESTION -> FlagState.UNFLAGGED
+        }
+        cells[coordinate] = cell.copy(flagState = nextState)
     }
 
     fun reveal(coordinate: Coordinate): RevealOutcome {
@@ -44,7 +49,7 @@ class Board(
         val initialSafeZone = if (!minesInitialised) initialiseMines(safeOrigin = coordinate) else emptySet()
 
         val target = cells[coordinate]!!
-        if (target.isRevealed || target.isFlagged) return RevealOutcome.NO_OP
+        if (target.isRevealed || target.flagState == FlagState.FLAGGED) return RevealOutcome.NO_OP
         if (target.isMine) {
             cells[coordinate] = target.copy(isRevealed = true)
             return RevealOutcome.MINE_DETONATED
@@ -106,12 +111,16 @@ class Board(
         while (queue.isNotEmpty()) {
             val coord = queue.removeFirst()
             val cell = cells[coord] ?: continue
-            if (cell.isRevealed || cell.isFlagged || cell.isMine) continue
-            cells[coord] = cell.copy(isRevealed = true)
+            if (cell.isRevealed || cell.flagState == FlagState.FLAGGED || cell.isMine) continue
+            cells[coord] = cell.copy(isRevealed = true, flagState = FlagState.UNFLAGGED)
             if (cell.adjacentMines == 0) {
                 for (n in coord.neighbours(dimensions, wrap)) {
                     val neighbourCell = cells[n] ?: continue
-                    if (!neighbourCell.isRevealed && !neighbourCell.isFlagged && !neighbourCell.isMine) {
+                    if (
+                        !neighbourCell.isRevealed &&
+                        neighbourCell.flagState != FlagState.FLAGGED &&
+                        !neighbourCell.isMine
+                    ) {
                         queue.addLast(n)
                     }
                 }
