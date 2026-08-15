@@ -262,6 +262,17 @@ input[type="number"] { width: 90px; }
 .icon-btn:hover  { background: var(--colour-panel-strong); }
 .icon-btn:active { transform: scale(0.95); }
 
+.mode-toggle {
+    min-width: 92px;
+    padding: 0.5rem 0.7rem;
+}
+
+.mode-toggle.flag-mode {
+    background: var(--colour-flag);
+    color: var(--colour-text);
+    border-color: transparent;
+}
+
 /* =========================================================================
    CUSTOM CONTROLS DRAWER + GAME CONTROLS BAR
    ------------------------------------------------------------------------- */
@@ -378,12 +389,30 @@ button.primary:hover {
 #state-indicator[data-state="WON"]         { color: var(--colour-success); }
 #state-indicator[data-state="LOST"]        { color: var(--colour-danger); }
 
+.server-loading {
+    max-width: 720px;
+    padding: 0.75rem 1rem;
+    background: var(--colour-panel-strong);
+    border: 1px solid var(--colour-accent);
+    border-radius: 8px;
+    color: var(--colour-text);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: center;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.server-loading[hidden] {
+    display: none;
+}
+
 /* =========================================================================
    BOARD AND CELLS — fr-based scaling driven entirely by CSS variables
    ------------------------------------------------------------------------- */
 
 #board-container {
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
     max-width: 100%;
     padding: 0.25rem;
     display: flex;

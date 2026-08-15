@@ -44,6 +44,7 @@
                 <span class="hud-icon">◷</span>
                 <span class="hud-readout" id="timer">000</span>
             </div>
+            <button type="button" id="mode-toggle-btn" class="mode-toggle" title="Toggle dig or flag mode">Dig Mode</button>
             <button type="button" id="mute-btn" class="icon-btn" title="Mute sound">🔊</button>
             <button type="button" id="info-btn" class="icon-btn" title="How to play">?</button>
         </div>
@@ -75,6 +76,10 @@
             </label>
             <span id="state-indicator" data-state="READY">Ready</span>
         </section>
+
+        <div id="server-loading" class="server-loading" role="status" aria-live="polite" hidden>
+            Waking up the server... this might take 40-50 seconds if no one has played recently.
+        </div>
 
         <section id="board-container">
             <div id="board" aria-label="Game board"></div>

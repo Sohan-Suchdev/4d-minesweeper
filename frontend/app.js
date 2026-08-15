@@ -1,6 +1,7 @@
 "use strict";
 
-const API_BASE = "";
+const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const API_BASE_URL = isLocal ? "/api" : "https://YOUR_RENDER_URL.onrender.com/api";
 const FIXED_DIMENSIONS = 4;
 const MIN_FADE_MS = 180;
 const REVEAL_RIPPLE_STEP_SECONDS = 0.03;
@@ -12,6 +13,7 @@ let currentGame = null;
 let cellByCoord = new Map();
 let highlighted = [];
 let deltaMode = false;
+let currentMode = "dig";
 let firstClickMade = false;
 let lastClickedCoord = null;
 let previouslyRevealedKeys = new Set();
@@ -271,7 +273,7 @@ function buildCell(coord) {
     const dto = cellByCoord.get(coordKey(coord));
     if (dto) paintCell(el, dto);
 
-    el.addEventListener("click",       () => onReveal(coord));
+    el.addEventListener("click",       () => onCellClick(coord));
     el.addEventListener("contextmenu", (e) => { e.preventDefault(); onFlag(coord); });
     el.addEventListener("mouseenter",  () => onMouseEnter(coord));
     el.addEventListener("mouseleave",  clearHighlight);
@@ -401,10 +403,16 @@ function fillEndOfGameModal(modalId, timeFieldId, bestFieldId, newBest) {
     showModal(modalId);
 }
 
+function setServerLoading(isLoading) {
+    const loading = document.getElementById("server-loading");
+    if (!loading) return;
+    loading.hidden = !isLoading;
+}
+
 // ---------- Server interaction ----------
 
 async function fetchNewGame(config) {
-    const res = await fetch(`${API_BASE}/api/game/new`, {
+    const res = await fetch(`${API_BASE_URL}/game/new`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
@@ -418,13 +426,35 @@ async function fetchNewGame(config) {
 }
 
 async function postAction(path, coord) {
-    const res = await fetch(`${API_BASE}/api/game/${currentGame.id}/${path}`, {
+    const res = await fetch(`${API_BASE_URL}/game/${currentGame.id}/${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ coordinate: coord }),
     });
     if (!res.ok) return null;
     return res.json();
+}
+
+function updateModeButton() {
+    const btn = document.getElementById("mode-toggle-btn");
+    if (!btn) return;
+    const isFlagMode = currentMode === "flag";
+    btn.textContent = isFlagMode ? "Flag Mode" : "Dig Mode";
+    btn.classList.toggle("flag-mode", isFlagMode);
+    btn.setAttribute("aria-pressed", String(isFlagMode));
+}
+
+function toggleMode() {
+    currentMode = currentMode === "dig" ? "flag" : "dig";
+    updateModeButton();
+}
+
+function onCellClick(coord) {
+    if (currentMode === "flag") {
+        onFlag(coord);
+    } else {
+        onReveal(coord);
+    }
 }
 
 async function onReveal(coord) {
@@ -499,15 +529,20 @@ function handleWin() {
 async function startNewGame() {
     const boardEl = document.getElementById("board");
     boardEl.classList.add("loading");
-    const minFade = new Promise((r) => setTimeout(r, MIN_FADE_MS));
-    const [dto] = await Promise.all([fetchNewGame(getGameConfig()), minFade]);
-    if (!dto) { boardEl.classList.remove("loading"); return; }
-    resetTimer();
-    firstClickMade = false;
-    lastClickedCoord = null;
-    previouslyRevealedKeys = new Set();
-    updateBoard(dto);
-    requestAnimationFrame(() => boardEl.classList.remove("loading"));
+    setServerLoading(true);
+    try {
+        const minFade = new Promise((r) => setTimeout(r, MIN_FADE_MS));
+        const [dto] = await Promise.all([fetchNewGame(getGameConfig()), minFade]);
+        if (!dto) return;
+        resetTimer();
+        firstClickMade = false;
+        lastClickedCoord = null;
+        previouslyRevealedKeys = new Set();
+        updateBoard(dto);
+    } finally {
+        setServerLoading(false);
+        requestAnimationFrame(() => boardEl.classList.remove("loading"));
+    }
 }
 
 // ---------- Mini-grid demo (3⁴ board, centre cell highlighted, 80 neighbours pulsing) ----------
@@ -575,6 +610,9 @@ function buildMiniGrid() {
         audio.setMuted(muted);
         document.getElementById("mute-btn").textContent = muted ? "🔇" : "🔊";
     });
+
+    document.getElementById("mode-toggle-btn").addEventListener("click", toggleMode);
+    updateModeButton();
 
     document.getElementById("info-btn").addEventListener("click", () => showModal("modal-instructions"));
 
