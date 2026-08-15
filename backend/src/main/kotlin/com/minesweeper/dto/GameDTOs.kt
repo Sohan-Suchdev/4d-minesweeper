@@ -39,22 +39,22 @@ data class BoardDTO(
     val cells: List<CellDTO>,
 )
 
-// Sole sanitisation gate: isMine and adjacentMines are only ever populated on revealed cells.
-fun Cell.toSanitisedDTO(): CellDTO = CellDTO(
+// Sole sanitisation gate: mine identity is hidden until reveal, except after loss for board review.
+fun Cell.toSanitisedDTO(revealMineIdentity: Boolean = false): CellDTO = CellDTO(
     coordinate = coordinate.coords.toList(),
     isRevealed = isRevealed,
     isFlagged = isFlagged,
-    isMine = if (isRevealed) isMine else null,
+    isMine = if (isRevealed || (revealMineIdentity && isMine)) isMine else null,
     adjacentMines = if (isRevealed && !isMine) adjacentMines else null,
 )
 
 fun Board.toDTO(id: UUID): BoardDTO {
-    val cellList = allCells().map { it.toSanitisedDTO() }
     val state = when {
         allCells().any { it.isMine && it.isRevealed } -> GameState.LOST
         isWon() -> GameState.WON
         else -> GameState.IN_PROGRESS
     }
+    val cellList = allCells().map { it.toSanitisedDTO(revealMineIdentity = state == GameState.LOST) }
     return BoardDTO(
         id = id,
         dimensions = dimensions.toList(),

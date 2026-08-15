@@ -56,12 +56,11 @@ class Board(
     fun isWon(): Boolean = cells.values.all { it.isMine || it.isRevealed }
 
     /**
-     * Deferred mine placement: safe zone is the first-click cell plus its Moore neighbourhood, so the
-     * first reveal is guaranteed to detonate the cascade.
+     * Deferred mine placement: only the first-click cell is excluded, so the opener is never a mine
+     * but can still be an informative numbered cell.
      */
     private fun initialiseMines(safeOrigin: Coordinate) {
-        val safeZone = safeOrigin.neighbours(dimensions, wrap) + safeOrigin
-        val candidates = cells.keys - safeZone
+        val candidates = cells.keys - safeOrigin
         require(totalMines <= candidates.size) {
             "totalMines=$totalMines exceeds ${candidates.size} placeable cells after safe-zone exclusion"
         }

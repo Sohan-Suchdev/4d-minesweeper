@@ -28,34 +28,6 @@ class BoardTest {
         }
 
         @Test
-        @DisplayName("first click's neighbours contain no mines, guaranteeing a cascade")
-        fun neighboursAreSafe() {
-            val firstClick = Coordinate(intArrayOf(2, 2, 2, 2))
-            val bounds = intArrayOf(4, 4, 4, 4)
-            repeat(20) { seed ->
-                val board = Board(bounds, totalMines = 60, wrap = false, random = Random(seed.toLong()))
-                board.reveal(firstClick)
-                for (n in firstClick.neighbours(bounds, wrap = false)) {
-                    assertFalse(board.cellAt(n).isMine, "seed=$seed produced a mine at neighbour $n")
-                }
-                assertEquals(0, board.cellAt(firstClick).adjacentMines)
-            }
-        }
-
-        @Test
-        @DisplayName("safe zone forces the first reveal to expand at least to the immediate neighbourhood")
-        fun cascadeStartsImmediately() {
-            val firstClick = Coordinate(intArrayOf(2, 2, 2, 2))
-            val bounds = intArrayOf(4, 4, 4, 4)
-            val board = Board(bounds, totalMines = 30, wrap = false, random = Random(42))
-            board.reveal(firstClick)
-            assertTrue(board.cellAt(firstClick).isRevealed)
-            for (n in firstClick.neighbours(bounds, wrap = false)) {
-                assertTrue(board.cellAt(n).isRevealed, "neighbour $n should be revealed by the starting cascade")
-            }
-        }
-
-        @Test
         @DisplayName("total mines placed equals the configured count")
         fun mineCountHonoured() {
             val board = Board(intArrayOf(5, 5, 5), totalMines = 20, wrap = false, random = Random(7))
@@ -64,13 +36,14 @@ class BoardTest {
         }
 
         @Test
-        @DisplayName("too many mines for the available cells throws")
-        fun overSubscribedMineCountThrows() {
+        @DisplayName("maximum mine count is total cells minus the first-click cell")
+        fun maximumMineCountLeavesFirstClickSafe() {
+            val firstClick = Coordinate(intArrayOf(1, 1))
             val board = Board(intArrayOf(3, 3), totalMines = 8, wrap = false)
-            // 9 cells total; safe zone for a centre click excludes all 9, leaving zero candidates.
-            assertThrows(IllegalArgumentException::class.java) {
-                board.reveal(Coordinate(intArrayOf(1, 1)))
-            }
+            // 9 cells total; excluding only the first click leaves 8 placeable mine cells.
+            board.reveal(firstClick)
+            assertFalse(board.cellAt(firstClick).isMine)
+            assertEquals(8, board.allCells().count { it.isMine })
         }
     }
 
