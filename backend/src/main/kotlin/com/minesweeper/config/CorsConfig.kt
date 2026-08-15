@@ -11,7 +11,7 @@ class CorsConfig : WebMvcConfigurer {
         registry.addMapping("/**")
             .allowedOrigins(
                 "http://localhost:3000",
-                "https://YOUR_GITHUB_USERNAME.github.io",
+                "https://sohan-suchdev.github.io",
             )
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")

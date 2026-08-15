@@ -1,7 +1,7 @@
 "use strict";
 
 const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-const API_BASE_URL = isLocal ? "/api" : "https://YOUR_RENDER_URL.onrender.com/api";
+const API_BASE_URL = isLocal ? "/api" : "https://fourd-minesweeper.onrender.com/api";
 const FIXED_DIMENSIONS = 4;
 const MIN_FADE_MS = 180;
 const REVEAL_RIPPLE_STEP_SECONDS = 0.03;
