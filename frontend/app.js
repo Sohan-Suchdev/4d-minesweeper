@@ -6,6 +6,7 @@ const FIXED_DIMENSIONS = 4;
 const MIN_FADE_MS = 180;
 const REVEAL_RIPPLE_STEP_SECONDS = 0.03;
 const MAX_REVEAL_RIPPLE_SECONDS = 0.72;
+const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 
 // ---------- State ----------
 
@@ -17,6 +18,7 @@ let currentMode = "dig";
 let firstClickMade = false;
 let lastClickedCoord = null;
 let previouslyRevealedKeys = new Set();
+let heartbeatInterval = null;
 const mooreOffsetCache = Object.create(null);
 
 // ---------- DOM identity ----------
@@ -409,6 +411,20 @@ function setServerLoading(isLoading) {
     loading.hidden = !isLoading;
 }
 
+async function sendHeartbeat() {
+    try {
+        await fetch(`${API_BASE_URL}/health`, { method: "GET", cache: "no-store" });
+    } catch {
+        // Render may be restarting or waking; keep the heartbeat silent.
+    }
+}
+
+function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    sendHeartbeat();
+    heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
+}
+
 // ---------- Server interaction ----------
 
 async function fetchNewGame(config) {
@@ -539,6 +555,7 @@ async function startNewGame() {
         lastClickedCoord = null;
         previouslyRevealedKeys = new Set();
         updateBoard(dto);
+        startHeartbeat();
     } finally {
         setServerLoading(false);
         requestAnimationFrame(() => boardEl.classList.remove("loading"));
